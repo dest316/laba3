@@ -30,14 +30,14 @@ struct FIO
 		{
 			if (data[i] == '_')
 			{
-				if (name.empty())
-				{
-					name = temp;
-					temp = "";
-				}
-				else if (surname.empty())
+				if (surname.empty())
 				{
 					surname = temp;
+					temp = "";
+				}
+				else if (name.empty())
+				{
+					name = temp;
 					temp = "";
 				}				
 			}
@@ -51,6 +51,18 @@ struct FIO
 	bool operator==(const FIO& other)
 	{
 		return (this->name == other.name && this->surname == other.surname && this->patronymic == other.patronymic);
+	}
+	bool operator>(const FIO& other)
+	{
+		if (this->surname == other.surname && this->name == other.name)
+			return (this->patronymic > other.patronymic);
+		else if (this->surname == other.surname)
+			return (this->name > other.name);
+		else return (this->surname > other.surname);
+	}
+	bool operator<(const FIO& other)
+	{
+		return (!(*this > other || *this == other));
 	}
 };
 
@@ -92,6 +104,18 @@ struct Date
 	bool operator==(const Date& other)
 	{
 		return (this->day == other.day && this->month == other.month && this->year == other.year);
+	}
+	bool operator>(const Date& other)
+	{
+		if (this->year == other.year && this->month == other.month)
+			return (this->day > other.day);
+		else if (this->year == other.year)
+			return (this->month > other.month);
+		else return (this->year > other.year);
+	}
+	bool operator<(const Date& other)
+	{
+		return (!(*this > other || *this == other));
 	}
 };
 
@@ -142,13 +166,42 @@ struct Student
 		}
 		phone_number = temp;
 	}
+	bool operator>(const Student& other)
+	{
+		if (this->fio > other.fio)
+			return true;
+		else if (this->fio == other.fio)
+			if (this->date_of_birthday > other.date_of_birthday)
+				return true;
+		return false;
+	}
+	bool operator<(const Student & other)
+	{
+		if (this->fio < other.fio)
+			return true;
+		else if (this->fio == other.fio)
+			if (this->date_of_birthday < other.date_of_birthday)
+				return true;
+		return false;
+	}
+	bool operator==(const Student& other)
+	{
+		return (!(*this > other && *this < other));
+	}
 	
 };
 
 
+void insertion_sort(Student* stud_array, int length)
+{
+	for (int i = 1; i < length; i++)
+		for (int j = i; j > 0 && stud_array[j - 1] > stud_array[j]; j--) // пока j>0 и элемент j-1 > j, x-массив int
+			swap(stud_array[j - 1], stud_array[j]);
+}
+
 ostream& operator<< (std::ostream& out, const FIO& fio)
 {
-	out << fio.name << " " << fio.surname << " " << fio.patronymic;
+	out << fio.surname << " " << fio.name << " " << fio.patronymic;
 	return out;
 }
 
@@ -178,13 +231,17 @@ int main()
 	getline(fout, temp);
 	int record_count = stoi(temp);
 	Student* students = new Student[record_count];
-	for (size_t i = 0; i < (record_count - 1); i++)
+	for (size_t i = 0; i < (record_count); i++)
 	{
 		getline(fout, temp);
 		students[i] = Student(temp);
 	}
-	cout << students[2].date_of_birthday;
 	fout.close();
+	insertion_sort(students, record_count);
+	for (size_t i = 0; i < record_count; i++)
+	{
+		cout << students[i];
+	}
 	delete[] students;
 	return 0;
 }
